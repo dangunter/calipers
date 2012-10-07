@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "netlogger_calipers.h"
+#include "nl_calipers.h"
 
  static const volatile char rcsid[] = "$Id: disk_bench.c 32915 2012-10-06 11:53:27Z dang $";
 
@@ -30,10 +30,11 @@ static void usage(const char *msg)
     fprintf(stderr,"-   OUTPUT: output type c=csv, n=netlogger\n");
     fprintf(stderr,"Reports will occur every %.1fMB (%d operations)\n",
              rpt_mb, RPT_INTERVAL);
+         exit(1);
 }
 
 
-static void write_output(struct netlogger_calipers_t **nl, output_t outp)
+static void write_output(struct nlcali_t **nl, output_t outp)
 {
     static int write_num = 0;
     int i, j;
@@ -48,11 +49,11 @@ static void write_output(struct netlogger_calipers_t **nl, output_t outp)
     }
     
     for (i=0; i < 2; i++) {
-        struct netlogger_calipers_t *nlp = nl[i];
-        netlogger_calipers_calc(nlp);
+        struct nlcali_t *nlp = nl[i];
+        nlcali_calc(nlp);
         if (NL_HIST_HAS_DATA(nlp)) {
             if (outp == LOG) {
-                printf("%s\n",netlogger_calipers_log(nlp,
+                printf("%s\n",nlcali_log(nlp,
                     i ? "dbench.write" : "dbench.read"));
             }
             else {
@@ -77,7 +78,7 @@ static void write_output(struct netlogger_calipers_t **nl, output_t outp)
                            nlp->h_gdata[j]);
                 }
             }
-            netlogger_calipers_clear(nlp);
+            nlcali_clear(nlp);
         }
     }
 }
@@ -88,7 +89,7 @@ static int run(device_t src, device_t dst, int size, output_t outp)
     char buf1[BLOCK1MB];
     char src_buf[BLOCK], dst_buf[BLOCK];
     int i, j;
-    struct netlogger_calipers_t *nl[2];
+    struct nlcali_t *nl[2];
     
     /* init */
     if (src == DISK) {
@@ -104,32 +105,32 @@ static int run(device_t src, device_t dst, int size, output_t outp)
     }
     /* NL init, src + dst */
     for (i=0; i < 2; i++) {
-        nl[i] = netlogger_calipers_new(RPT_INTERVAL - 1);
-        netlogger_calipers_hist_auto(nl[i], 20, 3);
+        nl[i] = nlcali_new(RPT_INTERVAL - 1);
+        nlcali_hist_auto(nl[i], 20, 3);
     }
 
     /* go */
     for (i=0; i < size * (BLOCK1MB / BLOCK); i++) {
         /* read/write operation */
         if (src == DISK) {
-            netlogger_calipers_begin(nl[0]);
+            nlcali_begin(nl[0]);
             fread(src_buf, BLOCK, 1, src_fp);
-            netlogger_calipers_end(nl[0], BLOCK*1.);
+            nlcali_end(nl[0], BLOCK*1.);
         }
         else {
-            netlogger_calipers_begin(nl[0]);
+            nlcali_begin(nl[0]);
             memset(src_buf, BLOCK, i);
-            netlogger_calipers_end(nl[0], BLOCK*1.);
+            nlcali_end(nl[0], BLOCK*1.);
         }
         if (dst == DISK) {
-            netlogger_calipers_begin(nl[1]);
+            nlcali_begin(nl[1]);
             fwrite(src_buf, BLOCK, 1, dst_fp);
-            netlogger_calipers_end(nl[1], BLOCK*1.);
+            nlcali_end(nl[1], BLOCK*1.);
         }
         else {
-            netlogger_calipers_begin(nl[1]);
+            nlcali_begin(nl[1]);
             memcpy(dst_buf, src_buf, BLOCK);
-            netlogger_calipers_end(nl[1], BLOCK*1.);      
+            nlcali_end(nl[1], BLOCK*1.);      
         }
         /* report */
         if (i > 0 && 0 == (i % RPT_INTERVAL)) {

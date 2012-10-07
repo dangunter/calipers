@@ -51,9 +51,9 @@ typedef enum {
 } netlogger_hstate_t;
      
 
-#define T netlogger_calipers_T
+#define T nlcali_T
 
-/** \struct netlogger_calipers_t
+/** \struct nlcali_t
  * \brief Hold current values for a single "caliper".
  * 
  * Each "caliper" tracks statistics for a univariate time-series.
@@ -71,7 +71,7 @@ typedef enum {
  *   - the ratio of the duration(ns)/value (prefix=g for gap)
  *   - the ratio of the value/duration(ns) (prefix=r for rate)
  */
-struct netlogger_calipers_t {
+struct nlcali_t {
     /* summary variables */
     double sum, rsum, gsum;
     double sd, rsd, gsd;
@@ -93,7 +93,7 @@ struct netlogger_calipers_t {
     unsigned *h_rdata, *h_gdata;
 };
 
-typedef struct netlogger_calipers_t *T;
+typedef struct nlcali_t *T;
 
 /* ---------------------------------------------------------------
  * Methods
@@ -150,7 +150,7 @@ typedef struct netlogger_calipers_t *T;
  * \param baseline Minimum number of values to get a standard deviation.
  * \return New bucket object
  */
-T netlogger_calipers_new(unsigned baseline);
+T nlcali_new(unsigned baseline);
 
 /**
  * Calculate histogram of calculated gap and rate.
@@ -166,7 +166,7 @@ T netlogger_calipers_new(unsigned baseline);
  * \param min Value at left edge of first bin
  * \param max Value at right edge of last bin
  */
-void netlogger_calipers_hist_manual(T self, unsigned n, double min, double max);
+void nlcali_hist_manual(T self, unsigned n, double min, double max);
 
 /**
  * Calculate histogram of calculated gap and rate.
@@ -180,7 +180,7 @@ void netlogger_calipers_hist_manual(T self, unsigned n, double min, double max);
  * \param n Number of bins, if zero turn off histogram.
  * \param pre Number of pre-init runs, to set ranges
  */
-void netlogger_calipers_hist_auto(T self, unsigned n, unsigned pre);
+void nlcali_hist_auto(T self, unsigned n, unsigned pre);
 
 /* Check if histogram has data to show */ 
 #define NL_HIST_HAS_DATA(X) (\
@@ -194,7 +194,7 @@ void netlogger_calipers_hist_auto(T self, unsigned n, unsigned pre);
  * \param self Calipers
  * \return None
  */
-#define netlogger_calipers_begin(S)  do {                               \
+#define nlcali_begin(S)  do {                               \
         gettimeofday(&(S)->begin, NULL);                                \
         if ((S)->count == 0) {                                          \
             memcpy(&(S)->first, &(S)->begin, sizeof((S)->first));       \
@@ -209,7 +209,7 @@ void netlogger_calipers_hist_auto(T self, unsigned n, unsigned pre);
  * \param self Calipers
  * \return None
  */
-#define netlogger_calipers_end(S,V) do {                        \
+#define nlcali_end(S,V) do {                        \
     if ((S)->is_begun) {                                        \
         register double dur, rate, gap;                         \
         gettimeofday(&(S)->end, NULL);                          \
@@ -253,7 +253,7 @@ void netlogger_calipers_hist_auto(T self, unsigned n, unsigned pre);
  * \param self Calipers
  * \return None
  */
-void netlogger_calipers_calc(T self);
+void nlcali_calc(T self);
 
 /**
  * \brief Return NetLogger BP log message.
@@ -279,12 +279,12 @@ void netlogger_calipers_calc(T self);
  *
  * Returned value does NOT have a newline at the end.
  *
- * \post As if netlogger_calipers_calc() was called
+ * \post As if nlcali_calc() was called
  * \param self Calipers
  * \param event NetLogger event name
  * \return Heap-allocated string
  */
-char *netlogger_calipers_log(T self, const char *event);
+char *nlcali_log(T self, const char *event);
 
 /**
  * \brief Build perfSONAR data block.
@@ -292,16 +292,16 @@ char *netlogger_calipers_log(T self, const char *event);
  * This block is a BSON object with the following structure:
  *
  * The attributes have the same meanings as in the log message
- * returned by netlogger_calipers_log().
+ * returned by nlcali_log().
  *
- * \post As if netlogger_calipers_calc was called
+ * \post As if nlcali_calc was called
  * \param self Calipers
  * \param event perfSONAR event type
  * \param m_id Metadata ID
  * \param sample_num Sample number 
  * \return BSON buffer
  */
-bson *netlogger_calipers_psdata(T self, const char *event, const char *m_id,
+bson *nlcali_psdata(T self, const char *event, const char *m_id,
                             int32_t sample_num);
 
 /** 
@@ -311,7 +311,7 @@ bson *netlogger_calipers_psdata(T self, const char *event, const char *m_id,
  * \param self Calipers
  * \return None
  */
-void netlogger_calipers_clear(T self);
+void nlcali_clear(T self);
 
 /** 
  * Free memory for bucket.
@@ -319,7 +319,7 @@ void netlogger_calipers_clear(T self);
  * \param self Calipers
  * \return None
  */
-void netlogger_calipers_free(T self);
+void nlcali_free(T self);
 
 /** @} */
 

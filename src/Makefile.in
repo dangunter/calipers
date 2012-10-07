@@ -20,7 +20,6 @@
 # RCSID: $Id$
 
 
-
 VPATH = @srcdir@
 am__make_dryrun = \
   { \
@@ -58,8 +57,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-noinst_PROGRAMS = netlogger_calipers_example$(EXEEXT) \
-	ps_calipers_bench$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -105,22 +102,9 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libnetlogger_calipers_la_LIBADD =
-am_libnetlogger_calipers_la_OBJECTS = netlogger_calipers.lo bson.lo \
-	numbers.lo
-libnetlogger_calipers_la_OBJECTS =  \
-	$(am_libnetlogger_calipers_la_OBJECTS)
-PROGRAMS = $(noinst_PROGRAMS)
-am_netlogger_calipers_example_OBJECTS =  \
-	netlogger_calipers_example.$(OBJEXT)
-netlogger_calipers_example_OBJECTS =  \
-	$(am_netlogger_calipers_example_OBJECTS)
-netlogger_calipers_example_LDADD = $(LDADD)
-netlogger_calipers_example_DEPENDENCIES = libnetlogger_calipers.la
-am_ps_calipers_bench_OBJECTS = ps_calipers_bench.$(OBJEXT)
-ps_calipers_bench_OBJECTS = $(am_ps_calipers_bench_OBJECTS)
-ps_calipers_bench_LDADD = $(LDADD)
-ps_calipers_bench_DEPENDENCIES = libnetlogger_calipers.la
+libnl_calipers_la_LIBADD =
+am_libnl_calipers_la_OBJECTS = nl_calipers.lo bson.lo numbers.lo
+libnl_calipers_la_OBJECTS = $(am_libnl_calipers_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/defs
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -134,12 +118,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libnetlogger_calipers_la_SOURCES) \
-	$(netlogger_calipers_example_SOURCES) \
-	$(ps_calipers_bench_SOURCES)
-DIST_SOURCES = $(libnetlogger_calipers_la_SOURCES) \
-	$(netlogger_calipers_example_SOURCES) \
-	$(ps_calipers_bench_SOURCES)
+SOURCES = $(libnl_calipers_la_SOURCES)
+DIST_SOURCES = $(libnl_calipers_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -287,14 +267,12 @@ top_srcdir = @top_srcdir@
 
 # Header files
 ACLOCAL_AMFLAGS = -I m4
-include_HEADERS = netlogger_calipers.h bson.h platform_hacks.h
+include_HEADERS = nl_calipers.h bson.h platform_hacks.h
 
 # Library
-lib_LTLIBRARIES = libnetlogger_calipers.la
-libnetlogger_calipers_la_SOURCES = netlogger_calipers.c bson.c numbers.c
-LDADD = libnetlogger_calipers.la
-netlogger_calipers_example_SOURCES = netlogger_calipers_example.c
-ps_calipers_bench_SOURCES = ps_calipers_bench.c
+lib_LTLIBRARIES = libnl_calipers.la
+libnl_calipers_la_SOURCES = nl_calipers.c bson.c numbers.c
+LDADD = libnl_calipers.la
 
 #EXTRA_DIST = $(other_headers)
 
@@ -388,23 +366,8 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-libnetlogger_calipers.la: $(libnetlogger_calipers_la_OBJECTS) $(libnetlogger_calipers_la_DEPENDENCIES) $(EXTRA_libnetlogger_calipers_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libnetlogger_calipers_la_OBJECTS) $(libnetlogger_calipers_la_LIBADD) $(LIBS)
-
-clean-noinstPROGRAMS:
-	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
-	echo " rm -f" $$list; \
-	rm -f $$list || exit $$?; \
-	test -n "$(EXEEXT)" || exit 0; \
-	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
-	echo " rm -f" $$list; \
-	rm -f $$list
-netlogger_calipers_example$(EXEEXT): $(netlogger_calipers_example_OBJECTS) $(netlogger_calipers_example_DEPENDENCIES) $(EXTRA_netlogger_calipers_example_DEPENDENCIES) 
-	@rm -f netlogger_calipers_example$(EXEEXT)
-	$(LINK) $(netlogger_calipers_example_OBJECTS) $(netlogger_calipers_example_LDADD) $(LIBS)
-ps_calipers_bench$(EXEEXT): $(ps_calipers_bench_OBJECTS) $(ps_calipers_bench_DEPENDENCIES) $(EXTRA_ps_calipers_bench_DEPENDENCIES) 
-	@rm -f ps_calipers_bench$(EXEEXT)
-	$(LINK) $(ps_calipers_bench_OBJECTS) $(ps_calipers_bench_LDADD) $(LIBS)
+libnl_calipers.la: $(libnl_calipers_la_OBJECTS) $(libnl_calipers_la_DEPENDENCIES) $(EXTRA_libnl_calipers_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(libnl_calipers_la_OBJECTS) $(libnl_calipers_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -413,10 +376,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bson.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netlogger_calipers.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netlogger_calipers_example.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nl_calipers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/numbers.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ps_calipers_bench.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -703,7 +664,7 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -741,7 +702,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
-	clean-noinstPROGRAMS mostlyclean-am
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -816,22 +777,21 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-cscope clean-generic clean-libLTLIBRARIES clean-libtool \
-	clean-local clean-noinstPROGRAMS cscope cscopelist ctags dist \
-	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
-	dist-xz dist-zip distcheck distclean distclean-compile \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-tags distcleancheck distdir distuninstallcheck dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES
+	clean-local cscope cscopelist ctags dist dist-all dist-bzip2 \
+	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
+	distcheck distclean distclean-compile distclean-generic \
+	distclean-hdr distclean-libtool distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-data install-data-am \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-includeHEADERS \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-includeHEADERS uninstall-libLTLIBRARIES
 
 
 clean-local:

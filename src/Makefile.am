@@ -7,19 +7,12 @@
 
 # Header files
 ACLOCAL_AMFLAGS			 = -I m4
-include_HEADERS			 = netlogger_calipers.h bson.h platform_hacks.h
+include_HEADERS			 = nl_calipers.h bson.h platform_hacks.h
 
 # Library
-lib_LTLIBRARIES			 = libnetlogger_calipers.la
-libnetlogger_calipers_la_SOURCES = netlogger_calipers.c bson.c numbers.c
-LDADD				 = libnetlogger_calipers.la
-
-# Test programs
-noinst_PROGRAMS			   = netlogger_calipers_example \
-				     ps_calipers_bench
-netlogger_calipers_example_SOURCES = netlogger_calipers_example.c
-ps_calipers_bench_SOURCES		= ps_calipers_bench.c
-disk_bench_SOURCES				= disk_bench.c
+lib_LTLIBRARIES			 	= libnl_calipers.la
+libnl_calipers_la_SOURCES 	= nl_calipers.c bson.c numbers.c
+LDADD				 		= libnl_calipers.la
 
 #EXTRA_DIST = $(other_headers)
 

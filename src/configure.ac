@@ -1,15 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 
-AC_INIT([netlogger-calipers],trunk,[dkgunter@lbl.gov],[netlogger-calipers])
+AC_INIT([nl-calipers],trunk,[dkgunter@lbl.gov],[nl-calipers])
 
 printf '
- _____       _    __
-|   | | ___ | |_ |  |    ___  ___  ___  ___  ___
-| | | || -_||  _||  |__ | . || . || . || -_||  _|
-|_|___||___||_|  |_____||___||_  ||_  ||___||_|
-                             |___||___|
-
 NetLogger Calipers API
 
 For copyright and License see the file 'LICENSE' in the top level
@@ -17,7 +11,7 @@ source-code directory
 
 '
 AC_CANONICAL_TARGET
-AC_CONFIG_SRCDIR(netlogger_calipers.h)
+AC_CONFIG_SRCDIR(nl_calipers.h)
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(defs/nlconfig.h)
 AC_CONFIG_MACRO_DIR([m4])
@@ -67,6 +61,7 @@ dnl Makefiles
 dnl
 AC_CONFIG_FILES([
 Makefile
+examples/Makefile
 ])
 
 AC_OUTPUT

@@ -4,13 +4,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "netlogger_calipers.h"
+#include "nl_calipers.h"
 
-static const volatile char rcsid[] = "$Id: netlogger_calipers_example.c 32903 2012-10-03 00:23:22Z dang $";
+static const volatile char rcsid[] = "$Id: nlcali_example.c 32903 2012-10-03 00:23:22Z dang $";
 
 void usage(const char *s) {
     fprintf(stderr,"%s\n"
-            "usage: netlogger_calipers_example [N=num. loops] [M=work/loop]\n", s);
+            "usage: nlcali_example [N=num. loops] [M=work/loop]\n", s);
 }
 
 #define MAX_WORK 1000
@@ -28,33 +28,33 @@ int *do_something(int n)
 	return a;
 }
 
-void run(netlogger_calipers_T c, int numloops, int workperloop)
+void run(nlcali_T c, int numloops, int workperloop)
 {
     int i, *p;
     for (i=0; i < numloops; i++) {
-        netlogger_calipers_begin(c);
+        nlcali_begin(c);
         p = do_something(workperloop);
-        netlogger_calipers_end(c, 1.234);
+        nlcali_end(c, 1.234);
     }
 }
 
-void report(netlogger_calipers_T c)
+void report(nlcali_T c)
 {
     char *log_event;
     double d;
     int i;
     bson *bdata;
 
-    netlogger_calipers_calc(c);
+    nlcali_calc(c);
     printf("Value:\n");
     printf("    sum=%lf mean=%lf\n", c->sum, c->mean);
-    log_event = netlogger_calipers_log(c, "example");
+    log_event = nlcali_log(c, "example");
     assert(log_event);
     printf("Log event:\n%s\n", log_event);
     /* XXX: why? fwrite(log_event, 1024, 1, stdout); */
     printf("\n");
     free(log_event);
-    bdata = netlogger_calipers_psdata(c, "example", "METAID", 1);
+    bdata = nlcali_psdata(c, "example", "METAID", 1);
     assert(bdata);
     printf("Perfsonar data block (ASCII):\n");
     bson_print(bdata);
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 	int m = 0;
     int min_items = 0;
     int i;
-    netlogger_calipers_T calipers;
+    nlcali_T calipers;
 
     if (argc > 1) {
         if (sscanf(argv[1], "%d", &n) != 1 || n < 0) {
@@ -103,32 +103,32 @@ int main(int argc, char **argv)
 		m = 100;
 	}
     printf("Run %d iterations\n", n);
-    calipers = netlogger_calipers_new(1);
+    calipers = nlcali_new(1);
     
     printf("With manual histogram\n");
     /* note: rate = 1e9*dur / value, so if value =~ 1 and dur
        expected up to 0.001, rate =~ 1e6 */
-    netlogger_calipers_hist_manual(calipers, 100, 0, 1e6);
+    nlcali_hist_manual(calipers, 100, 0, 1e6);
     run(calipers, n, m);
     printf("Results, with manual histogram\n");
     report(calipers);
 
     printf("With auto histogram (2 runs)\n");
-    netlogger_calipers_hist_auto(calipers, 100, 1);
+    nlcali_hist_auto(calipers, 100, 1);
     run(calipers, n, m);
-    netlogger_calipers_calc(calipers);
-    netlogger_calipers_clear(calipers);
+    nlcali_calc(calipers);
+    nlcali_clear(calipers);
     run(calipers, n, m);    
     printf("Results, with auto histogram\n");
     report(calipers);
 
     printf("Without histogram\n");
-    netlogger_calipers_hist_manual(calipers, 0, 0, 0);
+    nlcali_hist_manual(calipers, 0, 0, 0);
     run(calipers, n, m);
     printf("Results, without histogram\n");
     report(calipers);
 
-	netlogger_calipers_free(calipers);
+	nlcali_free(calipers);
     return 0;
 
  ERROR:

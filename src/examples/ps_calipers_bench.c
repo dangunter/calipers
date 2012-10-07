@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "netlogger_calipers.h"
+#include "nl_calipers.h"
 
 static const volatile char rcsid[] = "$Id: ps_calipers_bench.c 27253 2011-02-26 17:46:48Z dang $";
 
@@ -38,24 +38,24 @@ int *do_something(int n)
     return a;
 }
 
-void run(netlogger_calipers_T c, double dur, int work)
+void run(nlcali_T c, double dur, int work)
 {
     int *p;
     
     do {
-        netlogger_calipers_begin(c);
+        nlcali_begin(c);
         p = do_something(work);
-        netlogger_calipers_end(c, 12345);
+        nlcali_end(c, 12345);
     } while (SUBTRACT_TV(c->end, c->first) < dur);
 }
 
-void report(netlogger_calipers_T c, int is_first, int work)
+void report(nlcali_T c, int is_first, int work)
 {
     char *log_event;
     double d;
     bson *bdata;
 
-    bdata = netlogger_calipers_psdata(c, "example", "METAID", 1);
+    bdata = nlcali_psdata(c, "example", "METAID", 1);
     assert(bdata);
     if (is_first) {
         printf("wall,inst,noinst,rate,usec,pctovhd,work\n");
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     int work = 0;
     int is_first = 1;
     struct timeval start;
-    netlogger_calipers_T calipers;
+    nlcali_T calipers;
 
     prog = argv[0];
 
@@ -95,15 +95,15 @@ int main(int argc, char **argv)
     }
 
     gettimeofday(&start, 0);
-    calipers = netlogger_calipers_new(1);
+    calipers = nlcali_new(1);
     do {
         run(calipers, sec, work);
         report(calipers, is_first, work);
         elapsed = SUBTRACT_TV(calipers->end, start);
-        netlogger_calipers_clear(calipers);
+        nlcali_clear(calipers);
         is_first = 0;
     } while(elapsed < ttl);
-    netlogger_calipers_free(calipers);
+    nlcali_free(calipers);
 
     return 0;
 

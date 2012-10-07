@@ -4,8 +4,6 @@
     Lawrence Berkeley National Laboratory (subject to receipt of any required 
     approvals from the U.S. Dept. of Energy).  All rights reserved.
   */
-static const volatile char rcsid[] ="$Id: netlogger_calipers.c 32915 2012-10-06 11:53:27Z dang $";
-
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -29,7 +27,7 @@ static const volatile char rcsid[] ="$Id: netlogger_calipers.c 32915 2012-10-06 
 #include "bson.h"
 
 /* Interface */
-#include "netlogger_calipers.h"
+#include "nl_calipers.h"
 
 /* ---------------------------------------------------------------
  * Utility functions
@@ -118,27 +116,27 @@ void netlogger_ksum_clear(struct netlogger_ksum_t *self, double x0)
  * NetLogger calipers methods
  */
 
-#define T netlogger_calipers_T
+#define T nlcali_T
 
 static void
 nl_calipers_hist_init(T self, unsigned n, double min, double width);
      
-T netlogger_calipers_new(unsigned min_items)
+T nlcali_new(unsigned min_items)
 {
-    T self = (T)malloc(sizeof(struct netlogger_calipers_t));
+    T self = (T)malloc(sizeof(struct nlcali_t));
     self->var.min_items = min_items;
     self->rvar.min_items = min_items;
     self->gvar.min_items = min_items;
     self->h_state = NL_HIST_OFF;
     self->h_rdata = self->h_gdata = NULL;
-    netlogger_calipers_clear(self);
+    nlcali_clear(self);
     return self;
 }
 
 /**
  * Allocate space and turn on histogramming.
  */
-void netlogger_calipers_hist_manual(T self, unsigned n, double min, double max)
+void nlcali_hist_manual(T self, unsigned n, double min, double max)
 {
     double width;
     
@@ -156,7 +154,7 @@ void netlogger_calipers_hist_manual(T self, unsigned n, double min, double max)
  * Allocate space and turn on histogramming,
  * for auto-histogram method.
  */
- void netlogger_calipers_hist_auto(T self, unsigned n, unsigned m)
+ void nlcali_hist_auto(T self, unsigned n, unsigned m)
  {
      self->h_state = NL_HIST_AUTO_PRE;
      self->h_auto_pre = m;
@@ -191,7 +189,7 @@ void nl_calipers_hist_init(T self, unsigned n, double min, double width)
     }
 }
 
-void netlogger_calipers_clear(T self)
+void nlcali_clear(T self)
 {
     netlogger_ksum_clear(&self->ksum, 0);
     netlogger_ksum_clear(&self->krsum, 0);
@@ -215,7 +213,7 @@ void netlogger_calipers_clear(T self)
     }
 }
 
-void netlogger_calipers_calc(T self)
+void nlcali_calc(T self)
 {
     if (self->dirty && (self->count > 0)) {
         self->sum  = self->ksum.s;
@@ -273,7 +271,7 @@ void netlogger_calipers_calc(T self)
 }
 
 #define LOG_BUFSZ 1024
-char *netlogger_calipers_log(T self,
+char *nlcali_log(T self,
                              const char *event)
 {
     struct timeval now;
@@ -283,7 +281,7 @@ char *netlogger_calipers_log(T self,
 
     gettimeofday(&now, NULL);
     if (self->dirty) {
-        netlogger_calipers_calc(self);
+        nlcali_calc(self);
     }    
     msg_size = LOG_BUFSZ;
     p = msg = malloc(msg_size);
@@ -376,7 +374,7 @@ error:
        }
 
  */
-bson *netlogger_calipers_psdata(T self, const char *event, const char *m_id,
+bson *nlcali_psdata(T self, const char *event, const char *m_id,
                                 int32_t sample_num)
 {
     struct timeval now;
@@ -387,7 +385,7 @@ bson *netlogger_calipers_psdata(T self, const char *event, const char *m_id,
 
     gettimeofday(&now, NULL);
     if (self->dirty) {
-        netlogger_calipers_calc(self);
+        nlcali_calc(self);
     }
     
     bson_buffer_init(&bb);
@@ -414,7 +412,7 @@ bson *netlogger_calipers_psdata(T self, const char *event, const char *m_id,
     bson_append_double(&bb, "dur", self->dur);
     bson_append_double(&bb, "dur_inst", self->dur_sum);
     /* add histogram data, if being recorded */
-    if (self->h_num > 0) {
+    if (NL_HIST_HAS_DATA(self)) {
         int i;
         char idx[16];
         /* rate hist */
@@ -453,7 +451,7 @@ bson *netlogger_calipers_psdata(T self, const char *event, const char *m_id,
     return(NULL);
 }
 
-void netlogger_calipers_free(T self)
+void nlcali_free(T self)
 {
     if (self) {
         free(self);
