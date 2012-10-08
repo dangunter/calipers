@@ -1,0 +1,11 @@
+Copying and redistribution of the contents of the source code
+files in this directory, unless otherwise indicated in the
+files themselves, is restricted under the terms given in the file 'LICENSE.txt', found at the top-level directory of this distribution
+or online at https://raw.github.com/dangunter/calipers/master/LICENSE.txt
+
+This includes but is not limited to the following files:
+o	nl_calipers.c
+o	nl_calipers.h
+o	examples/disk_bench.c
+o	examples/nl_calipers_ex1.c
+o	examples/ps_calipers_bench.c

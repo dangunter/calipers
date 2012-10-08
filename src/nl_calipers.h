@@ -1,12 +1,10 @@
-/* 
-Copyright (c) 2006, The Regents of the University of California, through 
-Lawrence Berkeley National Laboratory (subject to receipt of any required 
-approvals from the U.S. Dept. of Energy).  All rights reserved.
-*/
+/* Copyright 2012 The Regents of the University of California */
+/* See COPYING for information about copying and redistribution.*/
+
 /** \file nl_calipers.h
  * Efficient summarization of measured activites.
  */
-
+ 
 #include <string.h> /* for memcpy() in macro */
 #include "bson.h"
 

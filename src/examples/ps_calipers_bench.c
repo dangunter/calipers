@@ -1,4 +1,8 @@
-/*
+/* Copyright 2012 The Regents of the University of California */
+/* See COPYING for information about copying and redistribution.*/
+
+/**
+ * \file ps_calipers_bench.c
  * Simple benchmark
  */
 #include <assert.h>

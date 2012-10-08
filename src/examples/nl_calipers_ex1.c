@@ -1,4 +1,8 @@
-/*
+/* Copyright 2012 The Regents of the University of California */
+/* See COPYING for information about copying and redistribution.*/
+
+/**
+ * \file nl_calipers_ex1.c
  * Example of netlogger calipers usage.
  */
 #include <assert.h>

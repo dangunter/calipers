@@ -1,9 +1,11 @@
- /* 
-    Copyright (c) 2009-2010, 
-    The Regents of the University of California, through 
-    Lawrence Berkeley National Laboratory (subject to receipt of any required 
-    approvals from the U.S. Dept. of Energy).  All rights reserved.
-  */
+/* Copyright 2012 The Regents of the University of California */
+/* See COPYING for information about copying and redistribution.*/
+
+/** \file nl_calipers.c
+ * Efficient summarization of measured activites.
+ */
+static const volatile char rcsid[] = "$Id$";
+ 
 #include <assert.h>
 #include <float.h>
 #include <math.h>

@@ -1,7 +1,9 @@
+/* Copyright 2012 The Regents of the University of California */
+/* See COPYING for information about copying and redistribution. 
+*/
 /**
- * Test nl calipers on some local disk perf.
- *
- * Dan Gunter, Sep 2012
+ * \file disk_bench.c
+ * Use nl calipers to measure local disk performance.
  */
 #include <assert.h>
 #include <stdio.h>
@@ -9,7 +11,7 @@
 #include <string.h>
 #include "nl_calipers.h"
 
- static const volatile char rcsid[] = "$Id: disk_bench.c 32915 2012-10-06 11:53:27Z dang $";
+static const volatile char rcsid[] = "$Id: disk_bench.c 32915 2012-10-06 11:53:27Z dang $";
 
 #define BLOCK1MB 1048576
 #define BLOCK 131072

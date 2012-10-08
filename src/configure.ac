@@ -4,10 +4,31 @@ dnl
 AC_INIT([nl-calipers],trunk,[dkgunter@lbl.gov],[nl-calipers])
 
 printf '
-NetLogger Calipers API
+         .                                                                   
+     ~.   =+                                                                  
+    .?:. ++?      88D.                                                        
+     7~  +?.      .D                                                          
+,:,::~~: ??I?+7????III?+=?II=                                                 
+.,,:~~~~~~=~===++???++==+++++?++++??????++++?++=~~~:::::~~~~~~~~=+?~I.        
+.,:~~~~~~=I===++?I?+8+=+?+++++$+++++?+?++++?O==?~~:O::~~~O+~:~~=+?II7=??I+I?  
+.:~~~~~~====+++???+I$I$O$OO88ZI8Z+$7?7++++?++==~~::::+:?7O+7D7OO??7~$.        
+.~~~~         ==+??7+?II?+=+II..          ...   .....     .      .. ....        
+.~~~~         =++?...     .III .                                                
+.~~:~         ++??           .                                                  
+ ~:~=.      ..+??+.                                                             
+ :~==       . ???.                                                              
+  ~==       ..???                                                               
+  ===.        ~?~                                                               
+  .=I       ..I?                                                                
+  .=?         ?I                                                                
+     NetLogger 
+     Calipers
+        API
 
-For copyright and License see the file 'LICENSE' in the top level
-source-code directory
+Copying and redistribution of the contents of the source code
+files in this directory, unless otherwise indicated in the
+files themselves, is restricted under the terms given in the file 'LICENSE.txt', found at the top-level directory of this distribution
+or online at https://raw.github.com/dangunter/calipers/master/LICENSE.txt
 
 '
 AC_CANONICAL_TARGET
