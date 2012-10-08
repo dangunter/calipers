@@ -13,14 +13,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#if 0
-} /* corrects emacs indentation */
-#endif
-
-/** \addtogroup nlcalipers
- * @{
- */
-
 
 /* ---------------------------------------------------------------
  * Data structures
@@ -51,28 +43,26 @@ typedef enum {
 
 #define T nlcali_T
 
-/** \struct nlcali_t
- * \brief Hold current values for a single "caliper".
+/** Hold current values for a single "caliper".
  * 
  * Each "caliper" tracks statistics for a univariate time-series.
- *
- * Summary statistics tracked: 
- * - count
- * - sum
- * - mean
- * - min
- * - max
- * - standard deviation.
- *
- * These statistics are tracked for:
- *   -  the value (no prefix)
- *   - the ratio of the duration(ns)/value (prefix=g for gap)
- *   - the ratio of the value/duration(ns) (prefix=r for rate)
+ * Summary statistics tracked include the count, sum, mean, min, max,
+ * and standard deviation.
+ * These statistics are tracked for the value (no prefix),
+ * the ratio of the duration(ns)/value (prefix=g for gap), and
+ * the ratio of the value/duration(ns) (prefix=r for rate).
  */
 struct nlcali_t {
-    /* summary variables */
-    double sum, rsum, gsum;
-    double sd, rsd, gsd;
+    /*@{*/
+    double sum; /**< sum of values */
+    double rsum; /**< sum of duration/value ratio */
+    double gsum; /**< sum of value/duration ratio */
+    /*@}*/
+    /*@{*/
+    double sd; /**< standard deviation of value */
+    double rsd; /**< standard deviation of duration/value ratio */
+    double gsd;
+    /*@}*/
     double min, max, mean;
     double rmin, rmax, rmean;
     double gmin, gmax, gmean;
@@ -91,6 +81,8 @@ struct nlcali_t {
     unsigned *h_rdata, *h_gdata;
 };
 
+/** Type definition for pointer to Caliper struct.
+ */
 typedef struct nlcali_t *T;
 
 /* ---------------------------------------------------------------
@@ -146,23 +138,22 @@ typedef struct nlcali_t *T;
  * Allocates memory and clears values.
  *
  * \param baseline Minimum number of values to get a standard deviation.
- * \return New bucket object
+ * \return New Calipers object
  */
 T nlcali_new(unsigned baseline);
 
 /**
- * Calculate histogram of calculated gap and rate.
- * Bin sizes are given in terms of rate (value / nanosecond)
+ * \brief Calculate histogram of calculated gap and rate.
  *
+ * Bin sizes are given in terms of rate (value / nanosecond).
  * This version sets the histogram bins manually.
- *
- * May be called multiple times, but destroys
- * previous data when called.
  *
  * \param self Calipers object
  * \param n Number of bins, if zero turn off histogram.
  * \param min Value at left edge of first bin
  * \param max Value at right edge of last bin
+ * \post May be called multiple times, but destroys
+ *       previous data when called.
  */
 void nlcali_hist_manual(T self, unsigned n, double min, double max);
 
@@ -186,10 +177,11 @@ void nlcali_hist_auto(T self, unsigned n, unsigned pre);
  (X)->h_state == NL_HIST_AUTO_FULL)
 
 /** 
- * Begin a timed event.
+ * \brief Begin a timed event.
+ * Modifies the input argument in-place.
  * Defined as a macro for performance.
  *
- * \param self Calipers
+ * \param S Calipers obj
  * \return None
  */
 #define nlcali_begin(S)  do {                               \
@@ -202,9 +194,11 @@ void nlcali_hist_auto(T self, unsigned n, unsigned pre);
 
 /** 
  * End a timed event.
+ * Modifies the input argument in-place.
  * Defined as a macro for performance.
  *
- * \param self Calipers
+ * \param S Calipers obj
+ * \param V Value of event
  * \return None
  */
 #define nlcali_end(S,V) do {                        \
@@ -245,10 +239,14 @@ void nlcali_hist_auto(T self, unsigned n, unsigned pre);
 } while(0)
 
 /**
- * Calculate values for all events so far.
+ * \brief Calculate values for all events so far.
+ *
  * Need to call this before accessing sums, means and deviations.
  *
- * \param self Calipers
+ * \post Sums, means, deviations, etc. are ready for retrieval
+ *        and/or output. Calling this multiple times has no
+ *        effect.
+ * \param self Calipers object
  * \return None
  */
 void nlcali_calc(T self);
@@ -260,27 +258,38 @@ void nlcali_calc(T self);
  * are for a single interval.
  *
  * Values in the log message have the following attributes:
- * - ts: Time of start of event
- * - event: Name of event, given by user
- * - <metric>.sum: Sum of metric
- * - <metric>.min: Minimum of metric
- * - <metric>.max: Maximum of metric
- * - <metric>.mean: Mean of metric
- * - <metric>.sd: Standard deviation of metric
- *  where <metric> is one of:
- *       + 'v' = value
- *       + 'g' = gap: time_interval(ns)/value
- *       + 'r' = rate: value/time_interval(ns)
- * - count: Number of samples
- * - dur: Wallclock duration (seconds)
- * - dur.inst: Total time spent between calipers start/end (seconds)
  *
- * Returned value does NOT have a newline at the end.
+ *   - ts: Time of start of event
+ *
+ *   - event: Name of event, given by user
+ * 
+ *   - {metric}.sum: Sum of metric
+ *
+ *   - {metric}.min: Minimum of metric
+ *
+ *   - {metric}.max: Maximum of metric
+ *
+ *   - {metric}.mean: Mean of metric
+ *
+ *   - {metric}.sd: Standard deviation of metric
+ *     where {metric} is one of:
+ *   
+ *        - 'v' = value
+ *       
+ *        - 'g' = gap: time_interval(ns)/value
+ *     
+ *        - 'r' = rate: value/time_interval(ns)
+ *
+ *   - count: Number of samples
+ * 
+ *   - dur: Wallclock duration (seconds)
+ *
+ *   - dur.inst: Total time spent between calipers start/end (seconds)
  *
  * \post As if nlcali_calc() was called
  * \param self Calipers
  * \param event NetLogger event name
- * \return Heap-allocated string
+ * \return Heap-allocated string, does NOT have a newline at the end.
  */
 char *nlcali_log(T self, const char *event);
 

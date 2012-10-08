@@ -39,7 +39,7 @@ static int format_iso8601(struct timeval *tv, char *buf);
 
 /**
  * Format a time per ISO8601.
- * Format is: YYYY-MM-DDThh:mm:ss.<fractional>
+ * Format is: YYYY-MM-DDThh:mm:ss.[fractional]
  *
  * @param tv Time
  * @param buf Buffer to format into (allocated)
@@ -364,17 +364,6 @@ error:
 
 /**
  * Build perfSONAR data block.
-
-    Format::
-    
-      'mid' : <metadata-id>
-      'data' : { 
-        'ts' : (double)timestamp in sec. since 1/1/1970,
-        '_sample' : (int)sample number,
-        '<field>' : <value>,
-        ...more fields and values..
-       }
-
  */
 bson *nlcali_psdata(T self, const char *event, const char *m_id,
                                 int32_t sample_num)
