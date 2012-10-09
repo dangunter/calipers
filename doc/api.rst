@@ -15,15 +15,13 @@ the first argument to all the other functions, in an OO-style.
 .. doxygenfunction:: nlcali_new
 
 All the fields in this structure are accessible (this is C, after all),
-but beware that many of them are meaningless until after you have called
-`nlcali_calc()`, documented below. The summary statistics are a standard
-set of values held in *struct summary_t*
+see `Structs`_ for details.
 
-.. doxygenstruct:: summary_t
+Instrumenting
+-------------
 
-The main *struct nl_cali_t* is as follows:
-
-.. doxygenstruct:: nlcali_t
+.. doxygendefine:: nlcali_begin
+.. doxygendefine:: nlcali_end
 
 Histogram
 ---------
@@ -34,15 +32,22 @@ methods beginning in `nlcali_hist`.
 .. doxygenfunction:: nlcali_hist_manual
 .. doxygenfunction:: nlcali_hist_auto
 
-Instrumenting
--------------
-
-.. doxygendefine:: nlcali_begin
-.. doxygendefine:: nlcali_end
-
 Output
 ------
 
 .. doxygenfunction:: nlcali_calc
 .. doxygenfunction:: nlcali_log
 .. doxygenfunction:: nlcali_psdata
+
+Structs
+-------
+Fields in the main nlcali_t struct are accessible (since this is C, after all), but beware that many of them are meaningless until after you have called
+`nlcali_calc`.
+
+.. doxygenstruct:: nlcali_t
+
+Summary statistics, i.e. min, mean, etc., are computed for the value,
+and two ratios of the value/duration and duration/value. In all cases, the same basic information is kept in he `summary_t`_ structure.
+
+.. doxygenstruct:: summary_t
+

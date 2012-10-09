@@ -1,0 +1,23 @@
+@import url("default.css");
+
+div.body p {
+    line-height: 100%;    
+}
+div.body blockquote {
+    margin-top: 0;
+    padding: 0;
+}
+
+div.body blockquote div p {
+    margin: 5px 0 2px 0;
+}
+
+/* hide Public Members */
+div.body blockquote div em {
+    display: none;
+}
+
+div.body blockquote div a em {
+    font-size: 100%;
+    color: blue;
+}
