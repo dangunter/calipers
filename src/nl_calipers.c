@@ -135,9 +135,7 @@ T nlcali_new(unsigned min_items)
     return self;
 }
 
-/**
- * Allocate space and turn on histogramming.
- */
+/* Manual histogram */
 void nlcali_hist_manual(T self, unsigned n, double min, double max)
 {
     double width;
@@ -152,10 +150,7 @@ void nlcali_hist_manual(T self, unsigned n, double min, double max)
     nl_calipers_hist_init(self, n, min, width);
 }
 
-/**
- * Allocate space and turn on histogramming,
- * for auto-histogram method.
- */
+/* Automatic bin-size histogram */
  void nlcali_hist_auto(T self, unsigned n, unsigned m)
  {
      self->h_state = NL_HIST_AUTO_PRE;

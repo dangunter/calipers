@@ -41,13 +41,13 @@ Output
 
 Structs
 -------
-Fields in the main nlcali_t struct are accessible (since this is C, after all), but beware that many of them are meaningless until after you have called
-`nlcali_calc`.
+Main data object.
+Note that many of the values are meaningless until after you have called
+nlcali\_calc(), documented under `Output`_.
 
 .. doxygenstruct:: nlcali_t
 
-Summary statistics, i.e. min, mean, etc., are computed for the value,
-and two ratios of the value/duration and duration/value. In all cases, the same basic information is kept in he `summary_t`_ structure.
+Summary statistics data type.
 
-.. doxygenstruct:: summary_t
+.. doxygenstruct:: nlcali_summ_t
 

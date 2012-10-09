@@ -43,16 +43,16 @@ typedef enum {
 /**
  * Summary statistics for caliper metrics.
  */
-struct summary_t {
-    double sum;      /**< sum of values */
-    double min;      /**< smallest value */
-    double max;      /**< largest value */
-    double mean;     /**< mean value (=sum/count) */
-    double sd;       /**< standard deviation of value */
-    long long count; /**< count of values */
+struct nlcali_summ_t {
+    double sum;      /**< Sum of values */
+    double min;      /**< Smallest value */
+    double max;      /**< Largest value */
+    double mean;     /**< Mean value (=sum/count) */
+    double sd;       /**< Standard deviation of value */
+    long long count; /**< Count of values */
     /* internal variables */
-    struct netlogger_wvar_t var; /* streaming variance */
-    struct netlogger_ksum_t ksum; /* Kahan sum */
+    struct netlogger_wvar_t var; /**< Streaming variance */
+    struct netlogger_ksum_t ksum; /**< Kahan sum */
 };
 
 #define T nlcali_T
@@ -64,19 +64,33 @@ struct summary_t {
  * and standard deviation.
  */
 struct nlcali_t {
-    struct summary_t vsm; /**< summary of: value */
-    struct summary_t rsm; /**< summary of: duration/value (rate) */
-    struct summary_t gsm;  /** summary of: value/duration (gap) */
-    double dur_sum, dur;
-    /* internal variables */
-    unsigned is_begun, dirty;
-    struct timeval begin, end, first;
+    /* summaries */
+    struct nlcali_summ_t vsm; /**< Summary of: value. */
+    struct nlcali_summ_t rsm; /**< Summary of: duration/value (rate). */
+    struct nlcali_summ_t gsm;  /**< Summary of: value/duration (gap). */
+    double dur_sum; /**< Sum of all durations between begin/end. */
+    double dur; /**< Total duration between first begin and last end. */
     /* histogram */
-    netlogger_hstate_t h_state;
-    int h_auto_pre; /* pre-init phases left */
-    unsigned int h_num; /* #bins, 0=none */
-    double h_rmin, h_rwidth, h_gmin, h_gwidth;
-    unsigned *h_rdata, *h_gdata;
+    netlogger_hstate_t h_state; /**< Current state of histogram data. */
+    /** Number of pre-init phases left before an automatically
+        configured histogram can be filled with data. */
+    int h_auto_pre;
+    unsigned int h_num; /**< Number of histogram bins, 0=none */
+    double h_rmin;      /**< Histogram of rates, minimum value */
+    double h_rwidth;    /**< Histogram of rates, bin width */
+    unsigned *h_rdata;  /**< Data for histogram of rates */
+    double h_gmin;      /**< Histogram of gaps, minimum value */
+    double h_gwidth;    /**< Histogram of gaps, bin width */
+    unsigned *h_gdata;  /**< Data for histogram of gaps */
+    /* internal variables */
+    unsigned is_begun;  /**< Flag, are we in the middle of a begin/end? */
+    unsigned dirty;     /**< Flag, has the data been updated since last
+                            call nlcali_calc()? */
+    struct timeval begin; /**< Timestamp for most recent caliper begin */
+    struct timeval end;   /**< Timestamp for most recent caliper end */
+    struct timeval first; /**< Timestamp for the first caliper begin since
+                               the last clear(). This is used to calculate
+                               `dur`. */
 };
 
 /** Type definition for pointer to Caliper struct.
@@ -141,7 +155,7 @@ typedef struct nlcali_t *T;
 T nlcali_new(unsigned baseline);
 
 /**
- * \brief Calculate histogram of calculated gap and rate.
+ * Calculate histogram of calculated gap and rate.
  *
  * Bin sizes are given in terms of rate (value / nanosecond).
  * This version sets the histogram bins manually.
@@ -254,36 +268,23 @@ void nlcali_calc(T self);
  *
  * For general BP format, see (...). All the statistics
  * are for a single interval.
- *
- * Values in the log message have the following attributes:
- *
- *   - ts: Time of start of event
- *
- *   - event: Name of event, given by user
- * 
- *   - {metric}.sum: Sum of metric
- *
- *   - {metric}.min: Minimum of metric
- *
- *   - {metric}.max: Maximum of metric
- *
- *   - {metric}.mean: Mean of metric
- *
- *   - {metric}.sd: Standard deviation of metric
- *     where {metric} is one of:
- *   
- *        - 'v' = value
- *       
- *        - 'g' = gap: time_interval(ns)/value
- *     
- *        - 'r' = rate: value/time_interval(ns)
- *
- *   - count: Number of samples
- * 
- *   - dur: Wallclock duration (seconds)
- *
- *   - dur.inst: Total time spent between calipers start/end (seconds)
- *
+ * \verbatim embed:rst
+  Values in the log message have the following attributes:
+    - ts: Time of start of event
+    - event: Name of event, given by user
+    - {metric}.sum: Sum of metric
+    - {metric}.min: Minimum of metric
+    - {metric}.max: Maximum of metric
+    - {metric}.mean: Mean of metric 
+    - {metric}.sd: Standard deviation of metric,
+      where {metric} is one of:
+         * 'v' = value
+         * 'g' = gap: time_interval(ns)/value
+         * 'r' = rate: value/time_interval(ns) 
+    - count: Number of samples
+    - dur: Wallclock duration (seconds)
+    - dur.inst: Total time spent between calipers start/end (seconds)
+ \endverbatim
  * \post As if nlcali_calc() was called
  * \param self Calipers
  * \param event NetLogger event name
