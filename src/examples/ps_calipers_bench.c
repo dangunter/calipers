@@ -66,7 +66,8 @@ void report(nlcali_T c, int is_first, int work)
     }
     d = c->dur - c->dur_sum;
     printf("%lf,%lf,%lf,%lf,%lf,%lf,%d\n",
-           c->dur, c->dur_sum, d, c->count/d, d / c->count*1e6, d/c->dur*100., work);
+           c->dur, c->dur_sum, d, c->vsm.count/d,
+           d / c->vsm.count*1e6, d/c->dur*100., work);
 }
 
 int main(int argc, char **argv)

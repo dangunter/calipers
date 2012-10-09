@@ -16,7 +16,12 @@ the first argument to all the other functions, in an OO-style.
 
 All the fields in this structure are accessible (this is C, after all),
 but beware that many of them are meaningless until after you have called
-`nlcali_calc()`, documented below.
+`nlcali_calc()`, documented below. The summary statistics are a standard
+set of values held in *struct summary_t*
+
+.. doxygenstruct:: summary_t
+
+The main *struct nl_cali_t* is as follows:
 
 .. doxygenstruct:: nlcali_t
 

@@ -39,7 +39,21 @@ typedef enum {
      NL_HIST_AUTO_READY=3,
      NL_HIST_AUTO_FULL=4
 } netlogger_hstate_t;
-     
+
+/**
+ * Summary statistics for caliper metrics.
+ */
+struct summary_t {
+    double sum;      /**< sum of values */
+    double min;      /**< smallest value */
+    double max;      /**< largest value */
+    double mean;     /**< mean value (=sum/count) */
+    double sd;       /**< standard deviation of value */
+    long long count; /**< count of values */
+    /* internal variables */
+    struct netlogger_wvar_t var; /* streaming variance */
+    struct netlogger_ksum_t ksum; /* Kahan sum */
+};
 
 #define T nlcali_T
 
@@ -48,29 +62,13 @@ typedef enum {
  * Each "caliper" tracks statistics for a univariate time-series.
  * Summary statistics tracked include the count, sum, mean, min, max,
  * and standard deviation.
- * These statistics are tracked for the value (no prefix),
- * the ratio of the duration(ns)/value (prefix=g for gap), and
- * the ratio of the value/duration(ns) (prefix=r for rate).
  */
 struct nlcali_t {
-    /*@{*/
-    double sum; /**< sum of values */
-    double rsum; /**< sum of duration/value ratio */
-    double gsum; /**< sum of value/duration ratio */
-    /*@}*/
-    /*@{*/
-    double sd; /**< standard deviation of value */
-    double rsd; /**< standard deviation of duration/value ratio */
-    double gsd;
-    /*@}*/
-    double min, max, mean;
-    double rmin, rmax, rmean;
-    double gmin, gmax, gmean;
-    long long count, rcount, gcount;
+    struct summary_t vsm; /**< summary of: value */
+    struct summary_t rsm; /**< summary of: duration/value (rate) */
+    struct summary_t gsm;  /** summary of: value/duration (gap) */
     double dur_sum, dur;
     /* internal variables */
-    struct netlogger_wvar_t var, rvar, gvar;
-    struct netlogger_ksum_t ksum, krsum, kgsum;
     unsigned is_begun, dirty;
     struct timeval begin, end, first;
     /* histogram */
@@ -186,7 +184,7 @@ void nlcali_hist_auto(T self, unsigned n, unsigned pre);
  */
 #define nlcali_begin(S)  do {                               \
         gettimeofday(&(S)->begin, NULL);                                \
-        if ((S)->count == 0) {                                          \
+        if ((S)->vsm.count == 0) {                                          \
             memcpy(&(S)->first, &(S)->begin, sizeof((S)->first));       \
         }                                                               \
         (S)->is_begun = 1;                                              \
@@ -201,29 +199,29 @@ void nlcali_hist_auto(T self, unsigned n, unsigned pre);
  * \param V Value of event
  * \return None
  */
-#define nlcali_end(S,V) do {                        \
+#define nlcali_end(S,V) do {                                    \
     if ((S)->is_begun) {                                        \
         register double dur, rate, gap;                         \
         gettimeofday(&(S)->end, NULL);                          \
         dur = (S)->end.tv_sec - (S)->begin.tv_sec +             \
             ((S)->end.tv_usec - (S)->begin.tv_usec) / 1e6;      \
         (S)->dur_sum += dur;                                    \
-        NL_KSUM_ADD(((S)->ksum), (V));                          \
-        NL_WVAR_ADD((S)->var, (V));                             \
-        if ((V) < (S)->min) (S)->min = (V);                     \
-        if ((V) > (S)->max) (S)->max = (V);                     \
+        NL_KSUM_ADD(((S)->vsm.ksum), (V));                      \
+        NL_WVAR_ADD((S)->vsm.var, (V));                         \
+        if ((V) < (S)->vsm.min) (S)->vsm.min = (V);             \
+        if ((V) > (S)->vsm.max) (S)->vsm.max = (V);             \
         if ((V) != 0 && dur > 0) {                              \
             gap = (1e9*dur) / (V);                              \
             rate = (V) / (1e9*dur);                             \
-            NL_KSUM_ADD(((S)->krsum), rate);                    \
-            NL_WVAR_ADD((S)->rvar, rate);                       \
-            NL_KSUM_ADD(((S)->kgsum), gap);                     \
-            NL_WVAR_ADD((S)->gvar, gap);                        \
-            if (rate < (S)->rmin) (S)->rmin = rate;             \
-            if (gap < (S)->gmin) (S)->gmin = gap;               \
-            if (rate > (S)->rmax) (S)->rmax = rate;             \
-            if (gap > (S)->gmax) (S)->gmax = gap;               \
-            (S)->rcount++;                                      \
+            NL_KSUM_ADD(((S)->rsm.ksum), rate);                 \
+            NL_WVAR_ADD((S)->rsm.var, rate);                    \
+            NL_KSUM_ADD(((S)->gsm.ksum), gap);                  \
+            NL_WVAR_ADD((S)->gsm.var, gap);                     \
+            if (rate < (S)->rsm.min) (S)->rsm.min = rate;       \
+            if (gap < (S)->gsm.min) (S)->gsm.min = gap;         \
+            if (rate > (S)->rsm.max) (S)->rsm.max = rate;       \
+            if (gap > (S)->gsm.max) (S)->gsm.max = gap;         \
+            (S)->rsm.count++;                                   \
             if ((S)->h_state > NL_HIST_AUTO_PRE) {              \
                 int i;                                          \
                 NL_HBIN_R(S, rate, i);                          \
@@ -232,7 +230,7 @@ void nlcali_hist_auto(T self, unsigned n, unsigned pre);
                 (S)->h_gdata[i]++;                              \
             }                                                   \
         }                                                       \
-        (S)->count++;                                           \
+        (S)->vsm.count++;                                       \
         (S)->is_begun = 0;                                      \
         (S)->dirty = 1;                                         \
     }                                                           \

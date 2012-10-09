@@ -51,7 +51,7 @@ void report(nlcali_T c)
 
     nlcali_calc(c);
     printf("Value:\n");
-    printf("    sum=%lf mean=%lf\n", c->sum, c->mean);
+    printf("    sum=%lf mean=%lf\n", c->vsm.sum, c->vsm.mean);
     log_event = nlcali_log(c, "example");
     assert(log_event);
     printf("Log event:\n%s\n", log_event);
@@ -73,8 +73,8 @@ void report(nlcali_T c)
     }*/
     printf("Overhead:\n");
     d = c->dur - c->dur_sum;
-    printf("    begin/end pairs per sec: %lf\n", c->count / d);
-    printf("    usec per begin/end pair: %lf\n", d / c->count * 1e6);
+    printf("    begin/end pairs per sec: %lf\n", c->vsm.count / d);
+    printf("    usec per begin/end pair: %lf\n", d / c->vsm.count * 1e6);
     printf("    %%overhead: %lf\n", d / c->dur * 100.);
 }
 

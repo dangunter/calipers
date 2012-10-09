@@ -126,9 +126,9 @@ nl_calipers_hist_init(T self, unsigned n, double min, double width);
 T nlcali_new(unsigned min_items)
 {
     T self = (T)malloc(sizeof(struct nlcali_t));
-    self->var.min_items = min_items;
-    self->rvar.min_items = min_items;
-    self->gvar.min_items = min_items;
+    self->vsm.var.min_items = min_items;
+    self->rsm.var.min_items = min_items;
+    self->gsm.var.min_items = min_items;
     self->h_state = NL_HIST_OFF;
     self->h_rdata = self->h_gdata = NULL;
     nlcali_clear(self);
@@ -193,19 +193,19 @@ void nl_calipers_hist_init(T self, unsigned n, double min, double width)
 
 void nlcali_clear(T self)
 {
-    netlogger_ksum_clear(&self->ksum, 0);
-    netlogger_ksum_clear(&self->krsum, 0);
-    netlogger_ksum_clear(&self->kgsum, 0);
-    netlogger_wvar_clear(&self->var);
-    netlogger_wvar_clear(&self->rvar);
-    netlogger_wvar_clear(&self->gvar);
-    self->sd = self->rsd = self->gsd = 0;
-    self->min = self->rmin = self->gmin = DBL_MAX;
-    self->max = self->rmax = self->gmax = 0;
+    netlogger_ksum_clear(&self->vsm.ksum, 0);
+    netlogger_ksum_clear(&self->rsm.ksum, 0);
+    netlogger_ksum_clear(&self->gsm.ksum, 0);
+    netlogger_wvar_clear(&self->vsm.var);
+    netlogger_wvar_clear(&self->rsm.var);
+    netlogger_wvar_clear(&self->gsm.var);
+    self->vsm.sd = self->rsm.sd = self->gsm.sd = 0;
+    self->vsm.min = self->rsm.min = self->gsm.min = DBL_MAX;
+    self->vsm.max = self->rsm.max = self->gsm.max = 0;
     self->dur = self->dur_sum = 0;
     memset(&self->first, 0, sizeof(self->first));
-    self->count = 0;
-    self->rcount = 0;
+    self->vsm.count = 0;
+    self->rsm.count = 0;
     self->is_begun = 0;
     self->dirty = 0;
     if (self->h_state != NL_HIST_OFF) {
@@ -217,16 +217,16 @@ void nlcali_clear(T self)
 
 void nlcali_calc(T self)
 {
-    if (self->dirty && (self->count > 0)) {
-        self->sum  = self->ksum.s;
-        self->rsum = self->krsum.s;
-        self->gsum = self->kgsum.s;
-        self->mean = self->sum / self->count;
-        self->rmean = self->rsum / self->rcount;
-        self->gmean = self->gsum / self->rcount;
-        self->sd = WVAR_SD(self->var);
-        self->rsd = WVAR_SD(self->rvar);
-        self->gsd = WVAR_SD(self->gvar);
+    if (self->dirty && (self->vsm.count > 0)) {
+        self->vsm.sum  = self->vsm.ksum.s;
+        self->rsm.sum = self->rsm.ksum.s;
+        self->gsm.sum = self->gsm.ksum.s;
+        self->vsm.mean = self->vsm.sum / self->vsm.count;
+        self->rsm.mean = self->rsm.sum / self->rsm.count;
+        self->gsm.mean = self->gsm.sum / self->rsm.count;
+        self->vsm.sd = WVAR_SD(self->vsm.var);
+        self->rsm.sd = WVAR_SD(self->rsm.var);
+        self->gsm.sd = WVAR_SD(self->gsm.var);
         self->dur = self->end.tv_sec - self->first.tv_sec + 
             (self->end.tv_usec - self->first.tv_usec) / 1e6;
         self->dirty = 0;
@@ -237,8 +237,8 @@ void nlcali_calc(T self)
             /* choose min => lower of min and mean -3 standard deviations 
             unless no s.d. calculated yet, then just check vs. mean
             */
-            min = self->rsd < 0 ? MIN(self->rmin, self->rmean) : 
-                                  MIN(self->rmin, self->rmean - 3*self->rsd);
+            min = self->rsm.sd < 0 ? MIN(self->rsm.min, self->rsm.mean) : 
+                                  MIN(self->rsm.min, self->rsm.mean - 3*self->rsm.sd);
             /* merge w/previous min */
             if (self->h_rmin < DBL_MAX) {
                 min = MIN(min, self->h_rmin);
@@ -246,8 +246,9 @@ void nlcali_calc(T self)
             /* choose max => higher of max and mean +3 standard deviations 
             unless no s.d. calculated yet, then just check vs. mean
             */
-            max = self->rsd < 0 ? MAX(self->rmax, self->rmean) : 
-                                  MAX(self->rmax, self->rmean + 3*self->rsd);
+            max = self->rsm.sd < 0 ? MAX(self->rsm.max, self->rsm.mean) : 
+                                  MAX(self->rsm.max, self->rsm.mean 
+                                      + 3*self->rsm.sd);
             /* merge with previous max */
             if (self->h_rmin < DBL_MAX) {
                 double old_max = self->h_rmin + self->h_rwidth*self->h_num;
@@ -273,8 +274,7 @@ void nlcali_calc(T self)
 }
 
 #define LOG_BUFSZ 1024
-char *nlcali_log(T self,
-                             const char *event)
+char *nlcali_log(T self, const char *event)
 {
     struct timeval now;
     char *msg;
@@ -295,16 +295,18 @@ char *nlcali_log(T self,
     len = format_iso8601(&now, p);
     if ( -1 == len ) goto error;
     p += len;
+#define SF self /* alias, cosmetic */
     len = sprintf(p, " event=%s "
             "v.sum=%lf v.min=%lf v.max=%lf v.mean=%lf v.sd=%lf "
             "r.sum=%lf r.min=%lf r.max=%lf r.mean=%lf r.sd=%lf "
             "g.sum=%lf g.min=%lf g.max=%lf g.mean=%lf g.sd=%lf "
             "count=%lld dur=%lf dur.i=%lf",
             event,
-            self->sum, self->min, self->max, self->mean, self->sd, 
-            self->rsum, self->rmin, self->rmax, self->rmean, self->rsd,
-            self->gsum, self->gmin, self->gmax, self->gmean, self->gsd,
-            self->count, self->dur, self->dur_sum);
+            SF->vsm.sum, SF->vsm.min, SF->vsm.max, SF->vsm.mean, SF->vsm.sd, 
+            SF->rsm.sum, SF->rsm.min, SF->rsm.max, SF->rsm.mean, SF->rsm.sd,
+            SF->gsm.sum, SF->gsm.min, SF->gsm.max, SF->gsm.mean, SF->gsm.sd,
+            SF->vsm.count, SF->dur, SF->dur_sum);
+#undef SF
     if (-1 == len) goto error;
     p += len;
     /* histogram */
@@ -386,20 +388,20 @@ bson *nlcali_psdata(T self, const char *event, const char *m_id,
     bson_append_start_array(&bb, "data");
     bson_append_double(&bb, "ts", now.tv_sec + now.tv_usec/1e6);
     bson_append_int(&bb, "_sample", sample_num);
-    bson_append_double(&bb, "sum_v", self->sum);
-    bson_append_double(&bb, "min_v", self->min);
-    bson_append_double(&bb, "max_v", self->max);
-    bson_append_double(&bb, "mean_v", self->mean);
-    bson_append_double(&bb, "sd_v", self->sd);
-    bson_append_double(&bb, "sum_r", self->rsum);
-    bson_append_double(&bb, "min_r", self->rmin);
-    bson_append_double(&bb, "max_r", self->rmax);
-    bson_append_double(&bb, "sd_r", self->rsd);
-    bson_append_double(&bb, "sum_g", self->gsum);
-    bson_append_double(&bb, "min_g", self->gmin);
-    bson_append_double(&bb, "max_g", self->gmax);
-    bson_append_double(&bb, "sd_g", self->gsd);
-    bson_append_int(&bb, "count", self->count);
+    bson_append_double(&bb, "sum_v", self->vsm.sum);
+    bson_append_double(&bb, "min_v", self->vsm.min);
+    bson_append_double(&bb, "max_v", self->vsm.max);
+    bson_append_double(&bb, "mean_v", self->vsm.mean);
+    bson_append_double(&bb, "sd_v", self->vsm.sd);
+    bson_append_double(&bb, "sum_r", self->rsm.sum);
+    bson_append_double(&bb, "min_r", self->rsm.min);
+    bson_append_double(&bb, "max_r", self->rsm.max);
+    bson_append_double(&bb, "sd_r", self->rsm.sd);
+    bson_append_double(&bb, "sum_g", self->gsm.sum);
+    bson_append_double(&bb, "min_g", self->gsm.min);
+    bson_append_double(&bb, "max_g", self->gsm.max);
+    bson_append_double(&bb, "sd_g", self->gsm.sd);
+    bson_append_int(&bb, "count", self->vsm.count);
     bson_append_double(&bb, "dur", self->dur);
     bson_append_double(&bb, "dur_inst", self->dur_sum);
     /* add histogram data, if being recorded */
